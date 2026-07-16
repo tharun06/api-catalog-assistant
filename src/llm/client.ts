@@ -31,5 +31,8 @@ export const generateWithTools = async (prompt: string, functionDeclarations: an
       thinkingConfig: { thinkingBudget: 0 },
     },
   });
-  return {functionCall: response.functionCalls, text: response.text ?? ""};
+  if (response.functionCalls && response.functionCalls.length > 0) {
+    return { functionCall: response.functionCalls, text: "" };
+  }
+  return { functionCall: undefined, text: response.text ?? "" };
 };

@@ -13,10 +13,5 @@ for (const question of questions) {
   console.log("\n=== Q:", question, "===");
   const result = await routeQuestion(question);
   console.log("tool:", result.tool);
-  if (result.tool === null) {
-    console.log("text:", result.result);
-  } else {
-    console.log("args:", JSON.stringify(result.args));
-    console.log("result count:", Array.isArray(result.result) ? result.result.length : "n/a");
-  }
+  console.log("answer:", result.answer);
 }
