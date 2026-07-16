@@ -352,5 +352,5 @@ export const assessSpec = (apiName: string) => {
   ];
 };
 
-console.log(assessSpec("inventory-api"));
+// console.log(assessSpec("inventory-api"));
 // console.log(assessSpec("loyalty-rewards-api"));
