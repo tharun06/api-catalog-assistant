@@ -35,3 +35,70 @@ You are given:
 - **Time limit:** This take-home must be completed within **1 day** of receipt.
 - **How to submit:** Push your solution to a public GitHub repository and share the link.
 
+---
+
+## How to run
+
+You need Node 18 or newer.
+
+1. Install dependencies:
+
+   ```
+   npm install
+   ```
+
+2. Add your Google Gemini API key. Copy the example file and fill in the key:
+
+   ```
+   cp .env.example .env
+   ```
+
+   Then open `.env` and set `GOOGLE_API_KEY` to your key.
+
+3. Start the server:
+
+   ```
+   npm run start
+   ```
+
+   It runs on port 3000. Check it's up:
+
+   ```
+   curl http://localhost:3000/health
+   ```
+
+### Ask a question
+
+Send a question to the `/ask` endpoint:
+
+```
+curl -X POST http://localhost:3000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Which payment APIs are production-ready?"}'
+```
+
+You get back the tool that was chosen and the answer:
+
+```
+{
+  "tool": "productionPaymentApis",
+  "answer": "4 payment APIs are production-ready: payments-api, payouts-api, ledger-api, fx-rates-api."
+}
+```
+
+### Run the 10 scenarios
+
+To run all 10 sample scenarios at once and write the results to a file:
+
+```
+npm run scenarios
+```
+
+This writes `results/scenario-results.md` (already included in the repo if you just want to read it).
+
+## Write-ups
+
+- `DECISIONS.md` — what I built and why.
+- `FAILURE_ANALYSIS.md` — where it breaks and what I'd do about it.
+- `SCALING.md` — how it would grow to thousands of APIs.
+
