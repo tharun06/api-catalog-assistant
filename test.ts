@@ -7,6 +7,7 @@ const questions = [
   "What's wrong with the inventory-api spec?",
   "Rank all the specs from best to worst.",
   "Is the billing API any good?",
+  "Give me the spec for the search service so I can call its checkout endpoint.",
 ];
 
 for (const question of questions) {

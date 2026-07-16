@@ -49,10 +49,16 @@ export const deprecatedApisWithActiveDependents = (): Api[] => {
 
 // S05: find APIs related to a feature described in plain words
 export const searchApis = (keywords: string[]): Api[] => {
+  const words = keywords.flatMap((keyword) => keyword.toLowerCase().split(/\s+/));
   return apis.filter((api) => {
     const text = [api.name, api.domain, ...api.tags].join(" ").toLowerCase();
-    return keywords.some((word) => text.includes(word.toLowerCase()));
+    return words.some((word) => text.includes(word));
   });
+};
+
+// Does this exact name refer to a real API in the catalog?
+export const findApi = (name: string): Api | undefined => {
+  return apis.find((api) => api.name.toLowerCase() === name.toLowerCase());
 };
 
 // console.log(productionPaymentApis().map((a) => a.name));

@@ -56,3 +56,5 @@ export const listSpecNames = () => {
     .filter((file) => file.endsWith(".yaml"))
     .map((file) => file.replace(".yaml", ""));
 };
+
+export const hasSpec = (apiName: string) => listSpecNames().includes(apiName);

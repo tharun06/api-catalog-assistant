@@ -1,3 +1,5 @@
+import { hasSpec } from "../data/loader.js";
+
 export const formatAnswer = (tool: string, args: any, result: any): string => {
   if (tool === "productionPaymentApis") {
     const names = result.map((api: any) => api.name);
@@ -29,9 +31,11 @@ export const formatAnswer = (tool: string, args: any, result: any): string => {
   }
 
   if (tool === "searchApis") {
-    const names = result.map((api: any) => api.name);
-    if (names.length === 0) return `No APIs matched the keywords: ${args.keywords.join(", ")}.`;
-    return `Found ${names.length} APIs related to "${args.keywords.join(", ")}": ${names.join(", ")}.`;
+    if (result.length === 0) return `No APIs matched the keywords: ${args.keywords.join(", ")}.`;
+    const labeled = result.map(
+      (api: any) => `${api.name}${hasSpec(api.name) ? "" : " (no spec on file)"}`,
+    );
+    return `Found ${result.length} APIs related to "${args.keywords.join(", ")}": ${labeled.join(", ")}.`;
   }
 
   if (tool === "scoreSpec") {
