@@ -114,11 +114,129 @@ const checkConsistentPropertyCasing = (spec: any) => {
     const props = Object.keys(schemas[schemaName].properties || {});
     const badProps = props.filter((name) => !isCamelCase(name));
     if (badProps.length > 0) {
-      details.push(`Schema "${schemaName}" has non-camelCase properties: ${badProps.join(", ")}`);
+      details.push(
+        `Schema "${schemaName}" has non-camelCase properties: ${badProps.join(", ")}`,
+      );
     }
   }
 
   return { id: "DES-02", passed: details.length === 0, details };
+};
+
+// DOC-01: Every operation defines both a non-empty summary and a description.
+const checkOperationsDocumented = (spec: any) => {
+  const paths = spec.paths || {};
+  const details: string[] = [];
+
+  for (const path in paths) {
+    for (const method of HTTP_METHODS) {
+      const operation = paths[path][method];
+      if (!operation) continue;
+      if (!operation.summary || operation.summary.trim() === "") {
+        details.push(
+          `Missing summary at Path: ${path}, Method: ${method.toUpperCase()}`,
+        );
+      }
+      if (!operation.description || operation.description.trim() === "") {
+        details.push(
+          `Missing description at Path: ${path}, Method: ${method.toUpperCase()}`,
+        );
+      }
+    }
+  }
+
+  return { id: "DOC-01", passed: details.length === 0, details };
+};
+
+const resolveRef = (spec: any, ref: string) => {
+  const path = ref.replace("#/", "").split("/");
+  let node = spec;
+  for (const key of path) {
+    node = node?.[key];
+  }
+  return node;
+};
+
+// DOC-02: Every parameter and every schema property has a description.
+const checkParamsAndPropsDescribed = (spec: any) => {
+  const schemas = spec?.components?.schemas || {};
+  const details: string[] = [];
+  for (const path in spec.paths || {}) {
+    for (const method of HTTP_METHODS) {
+      const operation = spec.paths[path][method];
+      if (!operation) continue;
+
+      const parameters = operation.parameters || [];
+      for (const param of parameters) {
+        const resolved = param.$ref ? resolveRef(spec, param.$ref) : param;
+        if (!resolved?.description || resolved.description.trim() === "") {
+          details.push(
+            `Parameter "${resolved?.name}" in Path: ${path}, Method: ${method.toUpperCase()} is missing a description.`,
+          );
+        }
+      }
+    }
+  }
+
+  for (const schemaName in schemas) {
+    const props = schemas[schemaName].properties || {};
+    for (const propName in props) {
+      if (
+        !props[propName].description ||
+        props[propName].description.trim() === ""
+      ) {
+        details.push(
+          `Property "${propName}" in schema "${schemaName}" is missing a description.`,
+        );
+      }
+    }
+  }
+
+  return { id: "DOC-02", passed: details.length === 0, details };
+};
+
+// DOC-03: Request bodies and 2xx responses include at least one example or example value.
+const checkExamplesProvided = (spec: any) => {
+  const paths = spec.paths || {};
+  const details: string[] = [];
+
+  for (const path in paths) {
+    for (const method of HTTP_METHODS) {
+      const operation = paths[path][method];
+      if (!operation) continue;
+
+      const requestBody = operation.requestBody;
+      if (requestBody) {
+        const content = requestBody.content || {};
+        for (const mediaType in content) {
+          const mediaObj = content[mediaType];
+          if (!mediaObj.example && !mediaObj.examples) {
+            details.push(
+              `Request body for Path: ${path}, Method: ${method.toUpperCase()} is missing examples.`,
+            );
+          }
+        }
+      }
+
+      const responses = operation.responses || {};
+      for (const statusCode in responses) {
+        if (statusCode.startsWith("2")) {
+          const response = responses[statusCode];
+          const content = response.content || {};
+          for (const mediaType in content) {
+            const mediaObj = content[mediaType];
+            if (!mediaObj.example && !mediaObj.examples) {
+              details.push(
+                `Response ${statusCode} for Path: ${path}, Method: ${method.toUpperCase()} is missing examples.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return { id: "DOC-03", passed: details.length === 0, details };
 };
 
 export const assessSpec = (apiName: string) => {
@@ -132,6 +250,9 @@ export const assessSpec = (apiName: string) => {
     checkUniqueOperationIds(spec),
     checkConsistentPathNaming(spec),
     checkConsistentPropertyCasing(spec),
+    checkOperationsDocumented(spec),
+    checkParamsAndPropsDescribed(spec),
+    checkExamplesProvided(spec),
   ];
 };
 
