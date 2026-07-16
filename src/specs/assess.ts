@@ -239,6 +239,99 @@ const checkExamplesProvided = (spec: any) => {
   return { id: "DOC-03", passed: details.length === 0, details };
 };
 
+// CMP-01: Each operation declares at least one 4xx response.
+const checkErrorResponsesDeclared = (spec: any) => {
+  const paths = spec.paths || {};
+  const details: string[] = [];
+
+  for (const path in paths) {
+    for (const method of HTTP_METHODS) {
+      const operation = paths[path][method];
+      if (!operation) continue;
+
+      const responses = operation.responses || {};
+      let has4xxResponse = false;
+
+      for (const statusCode in responses) {
+        if (statusCode.startsWith("4")) {
+          has4xxResponse = true;
+          break;
+        }
+      }
+
+      if (!has4xxResponse) {
+        details.push(
+          `Operation for Path: ${path}, Method: ${method.toUpperCase()} is missing a 4xx response.`,
+        );
+      }
+    }
+  }
+
+  return { id: "CMP-01", passed: details.length === 0, details };
+};
+
+const isUntypedSchema = (schema: any) => {
+  if (!schema) return true;
+  if (schema.type !== "object") return false;
+  if (schema.$ref || schema.properties) return false;
+  return true;
+};
+
+// CMP-02: Every 2xx response with a body references a schema (inline or via $ref); no empty content or untyped 'object' placeholders.
+const checkResponseSchemasReferenced = (spec: any) => {
+  const paths = spec.paths || {};
+  const details: string[] = [];
+
+  for (const path in paths) {
+    for (const method of HTTP_METHODS) {
+      const operation = paths[path][method];
+      if (!operation) continue;
+
+      const responses = operation.responses || {};
+      for (const statusCode in responses) {
+        if (!statusCode.startsWith("2")) continue;
+
+        const content = responses[statusCode].content || {};
+        for (const mediaType in content) {
+          const mediaObj = content[mediaType];
+          if (isUntypedSchema(mediaObj.schema)) {
+            details.push(
+              `Response ${statusCode} for Path: ${path}, Method: ${method.toUpperCase()} has an untyped or empty schema.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  return { id: "CMP-02", passed: details.length === 0, details };
+};
+
+// CMP-03: info.version, info.title, info.contact, and at least one servers[] entry are present.
+const checkMetadataComplete = (spec: any) => {
+  const details: string[] = [];
+
+  if (!spec.info) {
+    details.push("Specification is missing info section.");
+  } else {
+    if (!spec.info.version) {
+      details.push("Specification is missing info.version.");
+    }
+    if (!spec.info.title) {
+      details.push("Specification is missing info.title.");
+    }
+    if (!spec.info.contact) {
+      details.push("Specification is missing info.contact.");
+    }
+  }
+
+  if (!spec.servers || spec.servers.length === 0) {
+    details.push("Specification is missing at least one servers entry.");
+  }
+
+  return { id: "CMP-03", passed: details.length === 0, details };
+};
+
 export const assessSpec = (apiName: string) => {
   const spec = loadSpec(apiName);
   if (!spec) return null;
@@ -253,8 +346,11 @@ export const assessSpec = (apiName: string) => {
     checkOperationsDocumented(spec),
     checkParamsAndPropsDescribed(spec),
     checkExamplesProvided(spec),
+    checkErrorResponsesDeclared(spec),
+    checkResponseSchemasReferenced(spec),
+    checkMetadataComplete(spec),
   ];
 };
 
-// console.log(assessSpec("inventory-api"));
+console.log(assessSpec("inventory-api"));
 // console.log(assessSpec("loyalty-rewards-api"));
