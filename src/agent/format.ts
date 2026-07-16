@@ -47,6 +47,7 @@ export const formatAnswer = (tool: string, args: any, result: any): string => {
       return `${result.apiName} scored ${result.score}/100 with no problems found.`;
     }
     const lines = result.problems.map((p: any) => {
+      if (p.details.length === 0) return `- [${p.id}, ${p.severity}]`;
       const detailLines = p.details.map((d: string) => `    - ${d}`).join("\n");
       return `- [${p.id}, ${p.severity}]\n${detailLines}`;
     });
@@ -58,6 +59,7 @@ export const formatAnswer = (tool: string, args: any, result: any): string => {
       return `${result.apiName} has no security problems.`;
     }
     const lines = result.problems.map((p: any) => {
+      if (p.details.length === 0) return `- [${p.id}]`;
       const detailLines = p.details.map((d: string) => `    - ${d}`).join("\n");
       return `- [${p.id}]\n${detailLines}`;
     });
